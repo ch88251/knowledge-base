@@ -4,6 +4,10 @@ Full-text search over the documents in your Google Drive. A sync job reads each
 document's metadata and text into Elasticsearch; the files themselves stay in Drive
 and search results link back to them.
 
+## User Interface
+
+![User Interface](docs/image.png)
+
 - **Backend**: Python, FastAPI (`backend/`)
 - **Frontend**: React + Vite, served by nginx (`frontend/`)
 - **Search**: Elasticsearch 8, with Kibana for inspecting the index
