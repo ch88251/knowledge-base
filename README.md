@@ -8,13 +8,6 @@ and search results link back to them.
 
 ![User Interface](docs/image.png)
 
-- **Backend**: Python, FastAPI (`backend/`)
-- **Frontend**: React + Vite, served by nginx (`frontend/`)
-- **Search**: Elasticsearch 8, with Kibana for inspecting the index
-
-Supported formats: `.txt`, `.pdf`, `.docx`, and native Google Docs. Legacy `.doc`
-files and scanned PDFs without a text layer are not searchable by content.
-
 ## Setup
 
 ### 1. Create Google OAuth credentials (one time)
