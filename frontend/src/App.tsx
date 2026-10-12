@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import {
   getSyncStatus,
   searchDocuments,
@@ -115,7 +115,7 @@ export default function App() {
 
   return (
     <main>
-      <header>
+      <header className="knowledge-header">
         <h1>Knowledge Base</h1>
         <SyncPanel />
       </header>

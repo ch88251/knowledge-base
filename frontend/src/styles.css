@@ -7,6 +7,7 @@
   --accent: #2563eb;
   --mark: #fde68a;
   --error: #c62828;
+  --secondary-bg: #aab8be;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--fg);
   background: var(--bg);
@@ -48,9 +49,21 @@ h1 {
   margin: 0;
 }
 
+.knowledge-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.knowledge-header h1 {
+  margin: 0;
+}
+
 .sync {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: left;
   gap: 0.75rem;
   flex-wrap: wrap;
   font-size: 0.85rem;
@@ -110,9 +123,10 @@ button {
 }
 
 button.secondary {
-  background: transparent;
+  background: var(--secondary-bg);
   border-color: var(--border);
   color: var(--fg);
+  width: 180px;
 }
 
 button:disabled {
