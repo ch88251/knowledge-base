@@ -30,6 +30,7 @@ def _docx(data: bytes) -> str:
 _EXTRACTORS = {
     "txt": _txt,
     "gdoc": _txt,  # Google Docs are exported as plain text
+    "md": _txt,
     "pdf": _pdf,
     "docx": _docx,
 }

@@ -1,7 +1,5 @@
 """Elasticsearch index definition and search."""
 
-from datetime import date, timedelta
-
 from elasticsearch import Elasticsearch
 
 MAPPINGS = {
@@ -9,6 +7,8 @@ MAPPINGS = {
     "properties": {
         "title": {"type": "text", "analyzer": "english"},
         "content": {"type": "text", "analyzer": "english", "index_options": "offsets"},
+        "source": {"type": "keyword"},
+        "version": {"type": "keyword", "index": False},
         "file_type": {"type": "keyword"},
         "mime_type": {"type": "keyword"},
         "owners": {"type": "keyword"},
@@ -24,49 +24,34 @@ MAPPINGS = {
 def ensure_index(es: Elasticsearch, index: str) -> None:
     if not es.indices.exists(index=index):
         es.indices.create(index=index, mappings=MAPPINGS)
+    else:
+        # Adds any fields introduced since the index was created.
+        es.indices.put_mapping(index=index, properties=MAPPINGS["properties"])
 
 
-def build_query(
-    q: str, date_from: date | None, date_to: date | None, time_zone: str = "UTC"
-) -> dict:
+def build_query(q: str) -> dict:
     if q:
-        must = {
+        return {
             "simple_query_string": {
                 "query": q,
                 "fields": ["title^3", "content"],
                 "default_operator": "and",
             }
         }
-    else:
-        must = {"match_all": {}}
-
-    filters = []
-    if date_from or date_to:
-        bounds: dict = {"time_zone": time_zone}
-        if date_from:
-            bounds["gte"] = date_from.isoformat()
-        if date_to:
-            # date_to is inclusive, so stop just before the following day
-            bounds["lt"] = (date_to + timedelta(days=1)).isoformat()
-        filters.append({"range": {"modified_time": bounds}})
-
-    return {"bool": {"must": [must], "filter": filters}}
+    return {"match_all": {}}
 
 
 def search(
     es: Elasticsearch,
     index: str,
     q: str,
-    date_from: date | None,
-    date_to: date | None,
-    time_zone: str,
     page: int,
     size: int,
 ) -> dict:
     resp = es.search(
         index=index,
         ignore_unavailable=True,
-        query=build_query(q, date_from, date_to, time_zone),
+        query=build_query(q),
         sort=["_score", {"modified_time": "desc"}] if q else [{"modified_time": "desc"}],
         from_=(page - 1) * size,
         size=size,

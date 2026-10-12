@@ -32,6 +32,8 @@ services:
       KB_GOOGLE_CREDENTIALS_FILE: /secrets/credentials.json
       KB_GOOGLE_TOKEN_FILE: /secrets/token.json
       KB_DRIVE_FOLDER_ID: ${KB_DRIVE_FOLDER_ID:-}
+      KB_GITHUB_TOKEN: ${KB_GITHUB_TOKEN:-}
+      KB_GITHUB_INCLUDE_FORKS: ${KB_GITHUB_INCLUDE_FORKS:-false}
     volumes:
       # Holds credentials.json (you provide) and token.json (written by `auth`).
       - ./secrets:/secrets

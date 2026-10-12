@@ -1,8 +1,11 @@
 # Knowledge Base
 
-Full-text search over the documents in your Google Drive. A sync job reads each
-document's metadata and text into Elasticsearch; the files themselves stay in Drive
-and search results link back to them.
+Full-text search over the documents in your Google Drive and the Markdown files in
+your GitHub repositories. A sync job reads each document's metadata and text into
+Elasticsearch; the files themselves stay where they are and search results link back
+to them.
+
+You can connect either source or both.
 
 ## User Interface
 
@@ -10,7 +13,7 @@ and search results link back to them.
 
 ## Setup
 
-### 1. Create Google OAuth credentials (one time)
+### 1. Create Google OAuth credentials (one time, Google Drive only)
 
 1. In the [Google Cloud Console](https://console.cloud.google.com/), create a project
    and enable the **Google Drive API**.
@@ -31,7 +34,7 @@ docker compose up -d --build
 | Kibana        | http://localhost:5601      |
 | Elasticsearch | http://localhost:9200      |
 
-### 3. Connect Google Drive (one time)
+### 3. Connect Google Drive (one time, optional)
 
 ```bash
 docker compose run --rm -p 8090:8090 backend python -m app.cli auth
@@ -40,26 +43,37 @@ docker compose run --rm -p 8090:8090 backend python -m app.cli auth
 Open the printed URL in your browser and approve read-only access. The token is saved
 to `secrets/token.json` and refreshed automatically afterwards.
 
-### 4. Index your documents
+### 4. Connect GitHub (one time, optional)
 
-Click **Sync from Google Drive** in the app, or run:
+1. In GitHub, open **Settings → Developer settings → Personal access tokens →
+   Fine-grained tokens** and generate a token with **Repository access: All
+   repositories** and the repository permission **Contents: Read-only**.
+2. Copy `.env.example` to `.env` and set `KB_GITHUB_TOKEN` to the token.
+3. Restart the backend: `docker compose up -d backend`.
+
+Every `.md` and `.markdown` file on the default branch of each repository you own is
+indexed, public and private. Other files are ignored. Repositories you forked are
+skipped unless you set `KB_GITHUB_INCLUDE_FORKS=true`.
+
+### 5. Index your documents
+
+Click **Sync documents** in the app, or run:
 
 ```bash
 docker compose exec backend python -m app.cli sync
 ```
 
-Sync is incremental: unchanged files are skipped, and files removed from Drive are
-removed from the index. Run it again whenever you want to pick up changes.
+Sync covers every connected source. It is incremental: unchanged files are skipped,
+and files removed from a source are removed from the index. Run it again whenever you
+want to pick up changes. If one source fails, the other is still synced.
 
 To index a single folder (and its subfolders) instead of the whole Drive, copy
 `.env.example` to `.env` and set `KB_DRIVE_FOLDER_ID` to the ID from the folder's URL.
 
 ## Searching
 
-- **Text**: all words must match by default. Use `"quotes"` for an exact phrase,
-  `a | b` for either term, `-word` to exclude, and `prefix*` for prefix matches.
-- **Date range** (optional): filters on the document's last-modified date, inclusive
-  on both ends. Either end can be left empty.
+All words must match by default. Use `"quotes"` for an exact phrase, `a | b` for
+either term, `-word` to exclude, and `prefix*` for prefix matches.
 
 Leaving the text empty lists documents newest first.
 

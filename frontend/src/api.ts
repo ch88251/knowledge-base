@@ -19,13 +19,16 @@ export interface SearchResponse {
 
 export interface SearchParams {
   q: string;
-  dateFrom: string;
-  dateTo: string;
   page: number;
 }
 
+export type SyncProgress =
+  | { phase: "listing"; source: string; found: number }
+  | { phase: "syncing"; source: string; current: string; done: number; total: number };
+
 export interface SyncStatus {
   running: boolean;
+  progress: SyncProgress | null;
   last_finished: string | null;
   last_result: Record<string, number> | null;
   last_error: string | null;
@@ -42,13 +45,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export function searchDocuments(params: SearchParams, signal?: AbortSignal): Promise<SearchResponse> {
-  const query = new URLSearchParams({
-    q: params.q,
-    page: String(params.page),
-    tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  });
-  if (params.dateFrom) query.set("date_from", params.dateFrom);
-  if (params.dateTo) query.set("date_to", params.dateTo);
+  const query = new URLSearchParams({ q: params.q, page: String(params.page) });
   return request(`/api/search?${query}`, { signal });
 }
 

@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import sys
 
 from elasticsearch import Elasticsearch
 
@@ -24,8 +25,10 @@ def main() -> None:
         print(f"Saved Google token to {settings.google_token_file}")
     else:
         es = Elasticsearch(settings.elasticsearch_url)
-        service = drive.get_service(settings.google_token_file)
-        print(run_sync(es, service, settings).as_dict())
+        stats, errors = run_sync(es, settings)
+        print(stats.as_dict())
+        if errors:
+            sys.exit("\n".join(errors))
 
 
 if __name__ == "__main__":

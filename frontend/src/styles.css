@@ -56,6 +56,27 @@ h1 {
   font-size: 0.85rem;
 }
 
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-basis: 100%;
+  min-width: 0;
+}
+
+.progress progress {
+  flex: none;
+  width: 12rem;
+  accent-color: var(--accent);
+}
+
+.progress span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 input,
 button {
   font: inherit;
@@ -79,14 +100,6 @@ button {
   gap: 1rem;
   flex-wrap: wrap;
   margin-top: 0.75rem;
-}
-
-.filters label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--muted);
-  font-size: 0.9rem;
 }
 
 button {

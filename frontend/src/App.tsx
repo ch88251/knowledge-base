@@ -13,6 +13,7 @@ const FILE_TYPE_LABELS: Record<string, string> = {
   pdf: "PDF",
   docx: "Word",
   gdoc: "Google Doc",
+  md: "Markdown",
 };
 
 function SyncPanel() {
@@ -28,7 +29,7 @@ function SyncPanel() {
     if (!status?.running) return;
     const timer = setInterval(() => {
       getSyncStatus().then(setStatus, () => undefined);
-    }, 2000);
+    }, 1000);
     return () => clearInterval(timer);
   }, [status?.running]);
 
@@ -38,16 +39,33 @@ function SyncPanel() {
   };
 
   const result = status?.last_result;
+  const progress = status?.running ? status.progress : null;
   return (
     <div className="sync">
       <button type="button" className="secondary" onClick={onSync} disabled={status?.running}>
-        {status?.running ? "Syncing…" : "Sync from Google Drive"}
+        {status?.running ? "Syncing…" : "Sync documents"}
       </button>
       {error && <span className="error">{error}</span>}
+      {progress?.phase === "listing" && (
+        <div className="progress">
+          <progress aria-label="Sync progress" />
+          <span className="muted">
+            Listing {progress.source}… {progress.found} found
+          </span>
+        </div>
+      )}
+      {progress?.phase === "syncing" && (
+        <div className="progress">
+          <progress aria-label="Sync progress" value={progress.done} max={progress.total} />
+          <span className="muted">
+            {progress.done} of {progress.total} · {progress.source} · {progress.current}
+          </span>
+        </div>
+      )}
       {!status?.running && status?.last_error && (
         <span className="error">Last sync failed: {status.last_error}</span>
       )}
-      {!status?.running && !status?.last_error && result && (
+      {!status?.running && result && (
         <span className="muted">
           Last sync: {result.indexed} indexed, {result.unchanged} unchanged, {result.deleted}{" "}
           removed
@@ -60,8 +78,6 @@ function SyncPanel() {
 
 export default function App() {
   const [q, setQ] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
   const [submitted, setSubmitted] = useState<SearchParams | null>(null);
   const [data, setData] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -86,12 +102,9 @@ export default function App() {
     return () => controller.abort();
   }, [submitted]);
 
-  const invalidRange = dateFrom !== "" && dateTo !== "" && dateFrom > dateTo;
-
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (invalidRange) return;
-    setSubmitted({ q, dateFrom, dateTo, page: 1 });
+    setSubmitted({ q, page: 1 });
   };
 
   const goToPage = (page: number) => {
@@ -118,19 +131,8 @@ export default function App() {
           autoFocus
         />
         <div className="filters">
-          <label>
-            Modified from
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-          </label>
-          <label>
-            to
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-          </label>
-          <button type="submit" disabled={invalidRange}>
-            Search
-          </button>
+          <button type="submit">Search</button>
         </div>
-        {invalidRange && <p className="error">The start date must not be after the end date.</p>}
       </form>
 
       {error && <p className="error">{error}</p>}

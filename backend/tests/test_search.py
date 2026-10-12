@@ -1,5 +1,3 @@
-from datetime import date
-
 from elastic_transport import ConnectionError as ESConnectionError
 from fastapi.testclient import TestClient
 
@@ -42,30 +40,16 @@ def client(fake):
 
 
 def test_build_query_text_only():
-    query = build_query("vpn setup", None, None)
-    assert query["bool"]["must"][0]["simple_query_string"]["query"] == "vpn setup"
-    assert query["bool"]["filter"] == []
+    assert build_query("vpn setup")["simple_query_string"]["query"] == "vpn setup"
 
 
-def test_build_query_date_range_is_inclusive():
-    query = build_query("", date(2026, 1, 1), date(2026, 1, 31), "America/Chicago")
-    assert query["bool"]["must"] == [{"match_all": {}}]
-    assert query["bool"]["filter"] == [
-        {
-            "range": {
-                "modified_time": {
-                    "time_zone": "America/Chicago",
-                    "gte": "2026-01-01",
-                    "lt": "2026-02-01",
-                }
-            }
-        }
-    ]
+def test_build_query_without_text_matches_everything():
+    assert build_query("") == {"match_all": {}}
 
 
 def test_search_endpoint():
     fake = FakeES()
-    resp = client(fake).get("/api/search", params={"q": " vpn ", "date_from": "2026-01-01", "page": 2})
+    resp = client(fake).get("/api/search", params={"q": " vpn ", "page": 2})
     assert resp.status_code == 200
     body = resp.json()
     assert body["total"] == 1
@@ -74,14 +58,13 @@ def test_search_endpoint():
     assert body["results"][0]["title_highlight"] is None
     call = fake.calls[0]
     assert call["from_"] == 10
-    assert call["query"]["bool"]["must"][0]["simple_query_string"]["query"] == "vpn"
+    assert call["query"]["simple_query_string"]["query"] == "vpn"
 
 
 def test_search_rejects_bad_input():
     c = client(FakeES())
-    assert c.get("/api/search", params={"date_from": "2026-02-01", "date_to": "2026-01-01"}).status_code == 422
-    assert c.get("/api/search", params={"tz": "Mars/Olympus"}).status_code == 422
-    assert c.get("/api/search", params={"date_from": "not-a-date"}).status_code == 422
+    assert c.get("/api/search", params={"page": 0}).status_code == 422
+    assert c.get("/api/search", params={"size": 500}).status_code == 422
 
 
 def test_search_returns_503_when_elasticsearch_is_down():

@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     drive_folder_id: str | None = None
     # Fixed so the OAuth redirect can be published from a container.
     oauth_port: int = 8090
+    # Personal access token; GitHub is synced only when this is set.
+    github_token: str | None = None
+    github_include_forks: bool = False
     max_file_bytes: int = 50 * 1024 * 1024
 
 
